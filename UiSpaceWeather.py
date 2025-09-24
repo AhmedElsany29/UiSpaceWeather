@@ -81,13 +81,15 @@ def get_space_weather_response(user_question, chat_history):
         # If the model gives a non-JSON response, return a canned error message
         st.error(f"حدث خطأ في استجابة النموذج: {e}")
         st.code(raw_text, language="json")
-        return None
+        # Added a specific message for non-JSON response
+        return {"answer_text": "لم أستطع فهم استجابة النموذج. هل يمكنك طرح سؤال آخر؟", "suggested_followup": None}
     except Exception as e:
         # For other errors, check for safety violations
         if "Blocked due to safety" in str(e):
             st.error("أعتذر، لا أستطيع الإجابة على هذا السؤال. يرجى طرح سؤال آخر.")
             return None
-        return {"answer_text": "لم أفهم سؤالك، هل يمكنك المحاولة مرة أخرى؟", "glossary": [], "language": "ar", "suggested_followup": None}
+        # Returning a clear error message for the user to try again.
+        return {"answer_text": "لم أفهم سؤالك، هل يمكنك المحاولة مرة أخرى؟", "suggested_followup": None}
 
 # --- Streamlit Chat UI ---
 
@@ -109,6 +111,7 @@ if "messages" not in st.session_state:
             - Out of scope (e.g. astrology): politely explain it’s not science and redirect.
             - IMPORTANT: If the user's question is not understandable or is out of context, respond with "لم أفهم سؤالك، هل يمكنك المحاولة مرة أخرى؟". Do NOT give a generic, positive response like "يا سلام! سؤالك رائع!" in this case.
             - At the very beginning of the chat, just introduce yourself and wait for the user's question. Do not provide any information until the user asks a question.
+            - For all responses, please format the output as pure JSON, even if the user's question is not about space weather. This is critical for the application to function correctly.
 
             Return output as pure JSON (no markdown fences), with this schema:
             {{
